@@ -1,5 +1,3 @@
-import Data.Sort
-
 data Direction = STRAIGHT |
                  RETURN   |
                  LEFT     |
@@ -33,11 +31,18 @@ directions   _           = []
 
 --comparepoints
 
-smallerelem (x1,y1) (x2,y2) | x1 < x2 =  (x1,y1)
+smallerelem (x1,y1) (x2,y2) | x1 < x2 =  True
                             | x1 == x2 = if (y1 < y2)
-                                         then (x1,y1)
-                                         else (x2,y2)
-                            | otherwise = (x2,y2)
-selemX a = sortWith smallerelem a
+                                         then True
+                                         else False
+                            | otherwise = False
+
+smallerangle (x1,y1) (x2,y2) | angle (x1,y1) < angle (x2,y2) =  True
+                            | otherwise = False
+
+sortelemTupleList :: (a -> a -> Bool) -> [a] -> [a]
+sortelemTupleList f l@(x:xs) = sortelemTupleList f (filter (not . f x) xs) ++
+                               x:sortelemTupleList f (filter (f x) xs)
+sortelemTupleList _ [] = []
 
 --convexhullsort (x:xs)
