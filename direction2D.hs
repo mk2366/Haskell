@@ -1,17 +1,19 @@
+import Data.List
+
 data Direction = STRAIGHT |
                  RETURN   |
                  LEFT     |
                  RIGHT
                  deriving (Show, Eq)
 
-type Point = (Float, Float)
+type Point = (Double, Double)
 
-angle :: Point -> Float
+angle :: Point -> Double
 angle p@(x,y) | x < 0 = pi - angle ((-1)*x,y)
               | x == 0 = pi/2
               | otherwise = atan (y/x)
 
-angle_between :: Point -> Point -> Float
+angle_between :: Point -> Point -> Double
 angle_between p1@(x1,y1) p2@(x2,y2) = normalize (angle p2 - angle p1)
                                             where normalize a | a > pi = a - 2 * pi
                                                               | a <= (-1) * pi = a + 2 * pi
@@ -26,15 +28,13 @@ direction p1@(x1,y1) p2@(x2,y2) p3@(x3,y3)  | ang == 0 = STRAIGHT
                                                              (x3 - x2, y3 - y2)
 
 directions :: [Point] -> [Direction]
-directions (p1:p2:p3:xs) = (direction p1 p2 p3) : directions (p2:p3:xs)
+directions (p1:p2:p3:xs) = direction p1 p2 p3 : directions ( p2:p3:xs )
 directions   _           = []
 
 --comparepoints
 
 smallerelem (x1,y1) (x2,y2) | y1 < y2 =  True
-                            | y1 == y2 = if (x1 < x2)
-                                         then True
-                                         else False
+                            | y1 == y2 = x1 < x2
                             | otherwise = False
 
 smallerangle (px, py) (x1,y1) (x2,y2) | angle (x1 - px,y1 - py) < angle (x2 - px, y2 - py) = True
@@ -53,11 +53,20 @@ graham_scan_adjust_stack p (p1:p2:p3:xs) | direction p2 p1 p == RIGHT ||
                                              = p1:p2:p3:xs
                                          | otherwise = p:p1:p2:p3:xs
 graham_scan_adjust_stack p xs = p:xs
+
+grahamConvexHull :: [Point] -> [Point]
+grahamConvexHull setOfPoints =  let (startPoint : zs)     =  sortelemTupleList smallerelem setOfPoints
+                                    pointList      =  sortelemTupleList ( smallerangle startPoint ) zs
+                                    step xs p = graham_scan_adjust_stack p xs
+                                in  foldl' step [startPoint] pointList
+                                   
+                                        
+
 --convexhullsort,(x:xs)
 
 
 
-graham_test_sample = [(0.3215348546593775,0.03629583077160248),
+grahamTestSample = [(0.3215348546593775,0.03629583077160248),
                       (0.02402358131857918,-0.2356728797179394),
                       (0.04590851212470659,-0.4156409924995536),
                       (0.3218384001607433,0.1379850698988746),
@@ -98,7 +107,7 @@ graham_test_sample = [(0.3215348546593775,0.03629583077160248),
                       (0.001675087028811806,0.1531837672490476),
                       (-0.4404289572876217,-0.2894855991839297)]
 
-graham_test_sample_result = [(-0.161920957418085,-0.4055339716426413),
+grahamTestSampleResult = [(-0.161920957418085,-0.4055339716426413),
                              (0.05054295812784038,0.4754929463150845),
                              (0.4823896228171788,-0.4776170002088109),
                              (0.4932166845474547,0.4928094162538735),
