@@ -1,4 +1,5 @@
 import Data.List
+import Data.Char
 
 data Direction = STRAIGHT |
                  RETURN   |
@@ -62,9 +63,42 @@ grahamConvexHull setOfPoints =  let (startPoint : zs)     =  sortelemTupleList s
                                    
                                         
 
---convexhullsort,(x:xs)
+asIntFold :: String -> Int
+asIntFold "" = error "Not good"
+asIntFold ('-' : xc) = -1 * asIntFold xc
+asIntFold s = foldl' step 0 s
+                where step x y | x == 0  || signum s' == signum x = s'
+                               | otherwise = error "Overflow"
+                        where s' = if isHexDigit y then x * 10 + digitToInt y
+                                                   else error "Fuck, no digit" 
 
+type ErrorMessage = String
+asIntFoldEither :: String -> Either ErrorMessage Int
 
+asIntFoldEither "" = Left "Not good"
+
+asIntFoldEither ('-' : xc) = case asIntFoldEither xc of
+                                  Right x -> Right (-1 * x)
+                                  Left  x -> Left x
+
+--asIntFoldEither s = foldl' step (Right 0) s
+--                       where step x' y = if isHexDigit y then 
+--                                                          case x' of
+--                                                               Right x -> if  x < 53687091 + digitToInt y 
+--                                                                                        then Right ( x * 10 + digitToInt y )
+--                                                                                        else Left "Overflow"
+--                                                                                             
+--                                                                                                           
+--                                                               Left x -> Left x
+--                                                         else Left "Oh my god, no digt"
+asIntFoldEither s = foldl' step (Right 0) s
+                       where step x' y = case x' of
+                                         Left  _              -> x'
+                                         Right r              -> if isHexDigit y
+                                                                 then if r < 53687091 + digitToInt y
+                                                                      then Right ( r * 10 + digitToInt y )
+                                                                      else Left "Overflow"
+                                                                 else Left "Shit, no digit"    
 
 grahamTestSample = [(0.3215348546593775,0.03629583077160248),
                       (0.02402358131857918,-0.2356728797179394),
