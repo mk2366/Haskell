@@ -11,8 +11,16 @@ takeWhile' _ [] = []
 takeWhile' p (x:xs) | p x = x : takeWhile' p xs
                     | otherwise = []
 
-groupByFoldr p xs = foldr automat [[]]
+groupByFoldr p = foldr automat [[]]
                                where
                                   automat x [[]] = [[x]]
-                                  automat x s | p  (last (last s)) x = (last s) ++ [[x]]
-                                              | otherwise    = s ++ [[x]]
+                                  automat x l@((s:ss):ls)
+                                              | p x s = (x:s:ss):ls
+                                              | otherwise = [x]:l
+
+anyFoldr :: Foldable t => (a -> Bool) -> t a -> Bool
+anyFoldr p = foldr (\a s -> if p a then True else False || s) False
+
+cycleFoldr :: [a] -> [a]
+cycleFoldr as = foldr automat as [1..]
+                   where automat _ s = as ++ s
