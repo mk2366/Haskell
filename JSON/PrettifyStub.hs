@@ -17,3 +17,6 @@ hcat xs = undefined
 
 (<>) :: Doc -> Doc -> Doc
 d1 <> d2 = undefined
+
+fsep :: [Doc] -> Doc
+fsep xs = undefined
