@@ -15,8 +15,5 @@ char c = undefined
 hcat :: [Doc] -> Doc
 hcat xs = undefined
 
-hexEscape :: Char -> Doc
-hexEscape c = undefined
-
 (<>) :: Doc -> Doc -> Doc
 d1 <> d2 = undefined
