@@ -3,14 +3,33 @@ module Prettify where
 import Numeric (showHex)
 import Data.Bits (shiftR, (.&.))
 import Data.Char (ord)
-import PrettifyStub as Stub
 
+data Doc = ToBeDefined
+     deriving (Show)
+
+text   :: String -> Doc
+text   str = undefined
+
+double :: Double -> Doc
+double num = undefined
+
+char :: Char -> Doc
+char c = undefined
+
+hcat :: [Doc] -> Doc
+hcat xs = undefined
+
+(<+>) :: Doc -> Doc -> Doc
+d1 <+> d2 = undefined
+
+fsep :: [Doc] -> Doc
+fsep xs = undefined
 
 string :: String -> Doc
 string = enclose '"' '"' . hcat . map oneChar
 
 enclose :: Char -> Char -> Doc -> Doc
-enclose left right x = char left Stub.<> x Stub.<> char right
+enclose left right x = char left <+> x <+> char right
 
 oneChar :: Char -> Doc
 oneChar c = case lookup c simpleEscapes of
@@ -24,19 +43,19 @@ simpleEscapes = zipWith ch "\b\n\f\r\t\\\"/" "bnfrt\\\"/"
             where ch a b = (a, ['\\', b])
 
 smallHex :: Int -> Doc
-smallHex x = text "\\u" Stub.<> text (replicate (4 - length h) '0')
-                        Stub.<> text h
+smallHex x = text "\\u" <+> text (replicate (4 - length h) '0')
+                        <+> text h
                   where h = showHex x ""
 
 astral :: Int -> Doc
-astral n = smallHex (a + 0xd800) Stub.<> smallHex (b + 0xdc00)
+astral n = smallHex (a + 0xd800) <+> smallHex (b + 0xdc00)
                   where a = (n `shiftR` 10) .&. 0x3ff
                         b = n .&. 0x3ff
  
 hexEscape :: Char -> Doc
 hexEscape c | d < 0x10000 = smallHex d
             | otherwise = astral (d - 0x10000) 
-               where d = ord (c)                       
+               where d = ord c                       
 
 series :: Char -> Char -> (a -> Doc) -> [a] -> Doc
 series open close item = enclose open close . fsep . punctuate (char ',')
@@ -45,4 +64,4 @@ series open close item = enclose open close . fsep . punctuate (char ',')
 punctuate :: Doc -> [Doc] -> [Doc]
 punctuate _ [] = []
 punctuate a [x] = [x]
-punctuate a (d:ds) = (d Stub.<> a) : punctuate a ds 
+punctuate a (d:ds) = (d <+> a) : punctuate a ds 

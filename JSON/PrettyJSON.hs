@@ -1,8 +1,8 @@
-module PrettyJSON where
+module PrettyJSON (renderJValue) where
 
 import Data.List
-import SimpleJSON
-import Prettify
+import SimpleJSON (JValue (..))
+import Prettify (Doc, text, double, string, series, (<+>))
 
 renderJValue :: JValue     -> Doc
 renderJValue JNull         = text "null"
@@ -10,11 +10,7 @@ renderJValue (JNumber n)   = double n
 renderJValue (JString s)   = string s
 renderJValue (JBool True)  = text "true"
 renderJValue (JBool False) = text "false"
--- renderJValue (JObject o)   = "{" ++ pairs o ++ "}"
---         where pairs [] = ""
---               pairs ps = intercalate ", " (map renderPair ps)
---               renderPair (k, v) = show k ++ ": " ++ renderJValue v
--- renderJValue (JArray a) = "[" ++ values a ++ "]"
---         where values [] = ""
---               values vs = intercalate ", " (map renderJValue vs)
+renderJValue (JObject o)   = series '{' '}' field o
+        where field (s, jo) = text s <+> text ": " <+> renderJValue jo 
+renderJValue (JArray a) = series '[' ']' renderJValue a
 
