@@ -5,13 +5,17 @@ module Prettify (Doc,
                  char,
                  text,
                  double,
-                 line
+                 line,
+                 compact,
+                 series,
+                 (<>),
+                 string
                  )
       where
 
 import Prelude (Show, String, Char, Int, Maybe (..), Double, map, (.), otherwise, (-), (+),
                 (<), (>), (==), (||), length, replicate, zipWith, undefined, lookup, show,
-                foldr)      
+                foldr, (++))      
 
 import Numeric (showHex)
 import Data.Bits (shiftR, (.&.))
@@ -41,6 +45,20 @@ char c = Char c
 line :: Doc
 line = Line
 
+-- This is the coolest function I ever saw
+compact :: Doc -> String
+compact x = transform [x]
+              where transform []      = ""
+                    transform (d:ds)  = 
+                       case d of 
+                             Empty        -> transform ds
+                             Char c       -> c:transform ds
+                             Text s       -> s ++ transform ds
+                             Line         -> '\n' : transform ds
+                             a `Concat` b -> transform (a:b:ds)
+                             _ `Union`  b -> transform (b:ds)
+
+
 hcat :: [Doc] -> Doc
 hcat = foldr (<>) Empty
 
@@ -64,6 +82,8 @@ group x = flatten x `Union` x
 flatten :: Doc -> Doc
 flatten (Concat x y) = flatten x `Concat` flatten y
 flatten Line = Char ' '
+flatten (x `Union` _) = flatten x
+flatten other = other
 
 string :: String -> Doc
 string = enclose '"' '"' . hcat . map oneChar
