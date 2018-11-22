@@ -1,35 +1,75 @@
-module Prettify where
+{-# LANGUAGE NoImplicitPrelude #-}
+
+module Prettify (Doc,
+                 empty,
+                 char,
+                 text,
+                 double,
+                 line
+                 )
+      where
+
+import Prelude (Show, String, Char, Int, Maybe (..), Double, map, (.), otherwise, (-), (+),
+                (<), (>), (==), (||), length, replicate, zipWith, undefined, lookup, show,
+                foldr)      
 
 import Numeric (showHex)
 import Data.Bits (shiftR, (.&.))
 import Data.Char (ord)
 
-data Doc = ToBeDefined
+data Doc = Empty          |
+           Char Char      |
+           Text String    |
+           Line           |
+           Concat Doc Doc |
+           Union  Doc Doc
      deriving (Show)
 
+empty :: Doc
+empty = Empty
+
 text   :: String -> Doc
-text   str = undefined
+text "" = Empty
+text x  = Text x
 
 double :: Double -> Doc
-double num = undefined
+double num = Text (show num)
 
 char :: Char -> Doc
-char c = undefined
+char c = Char c
+
+line :: Doc
+line = Line
 
 hcat :: [Doc] -> Doc
-hcat xs = undefined
+hcat = foldr (<>) Empty
 
-(<+>) :: Doc -> Doc -> Doc
-d1 <+> d2 = undefined
+(<>) :: Doc -> Doc -> Doc
+Empty <> d     = d
+d     <> Empty = d
+d1    <> d2    = d1 `Concat` d2  
 
 fsep :: [Doc] -> Doc
-fsep xs = undefined
+fsep = foldr (</>) Empty
+
+(</>) :: Doc -> Doc -> Doc
+x </> y = x <> softline <> y
+
+softline :: Doc
+softline = group Line
+
+group :: Doc -> Doc
+group x = flatten x `Union` x
+
+flatten :: Doc -> Doc
+flatten (Concat x y) = flatten x `Concat` flatten y
+flatten Line = Char ' '
 
 string :: String -> Doc
 string = enclose '"' '"' . hcat . map oneChar
 
 enclose :: Char -> Char -> Doc -> Doc
-enclose left right x = char left <+> x <+> char right
+enclose left right x = char left <> x <> char right
 
 oneChar :: Char -> Doc
 oneChar c = case lookup c simpleEscapes of
@@ -43,12 +83,12 @@ simpleEscapes = zipWith ch "\b\n\f\r\t\\\"/" "bnfrt\\\"/"
             where ch a b = (a, ['\\', b])
 
 smallHex :: Int -> Doc
-smallHex x = text "\\u" <+> text (replicate (4 - length h) '0')
-                        <+> text h
+smallHex x = text "\\u" <> text (replicate (4 - length h) '0')
+                        <> text h
                   where h = showHex x ""
 
 astral :: Int -> Doc
-astral n = smallHex (a + 0xd800) <+> smallHex (b + 0xdc00)
+astral n = smallHex (a + 0xd800) <> smallHex (b + 0xdc00)
                   where a = (n `shiftR` 10) .&. 0x3ff
                         b = n .&. 0x3ff
  
@@ -64,4 +104,4 @@ series open close item = enclose open close . fsep . punctuate (char ',')
 punctuate :: Doc -> [Doc] -> [Doc]
 punctuate _ [] = []
 punctuate a [x] = [x]
-punctuate a (d:ds) = (d <+> a) : punctuate a ds 
+punctuate a (d:ds) = (d <> a) : punctuate a ds 
