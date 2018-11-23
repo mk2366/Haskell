@@ -9,13 +9,15 @@ module Prettify (Doc,
                  compact,
                  series,
                  (<>),
-                 string
+                 (</>),
+                 string,
+                 pretty
                  )
       where
 
-import Prelude (Show, String, Char, Int, Maybe (..), Double, map, (.), otherwise, (-), (+),
+import Prelude (Show, String, Char, Int, Bool (..), Maybe (..), Double, map, (.), otherwise, (-), (+),
                 (<), (>), (==), (||), length, replicate, zipWith, undefined, lookup, show,
-                foldr, (++))      
+                foldr, (++), min)      
 
 import Numeric (showHex)
 import Data.Bits (shiftR, (.&.))
@@ -28,6 +30,13 @@ data Doc = Empty          |
            Concat Doc Doc |
            Union  Doc Doc
      deriving (Show)
+
+-- Hope I can do well
+fill :: Int -> Doc -> Doc
+fill num Concat a b | a == Empty = a <> (fill num b)
+                    | otherwise (fill num a) <> b
+fill num Char   c   | c == ' '   = repe 
+
 
 empty :: Doc
 empty = Empty
@@ -45,6 +54,7 @@ char c = Char c
 line :: Doc
 line = Line
 
+
 -- This is the coolest function I ever saw
 compact :: Doc -> String
 compact x = transform [x]
@@ -57,6 +67,25 @@ compact x = transform [x]
                              Line         -> '\n' : transform ds
                              a `Concat` b -> transform (a:b:ds)
                              _ `Union`  b -> transform (b:ds)
+
+pretty :: Int -> Doc -> String
+pretty width x = best 0 [x]
+            where best col (d:ds) = case d of
+                        Empty        -> best col ds
+                        Char c       -> c : best (col + 1) ds
+                        Text s       -> s ++ best (col + length s) ds
+                        Line         -> '\n' : best 0 ds
+                        a `Concat` b -> best col (a:b:ds)
+                        a `Union`  b -> nicest col (best col (a:ds)) (best col (b:ds))
+                  best _ _ = ""
+                  nicest col a b | (width - least) `fits` a = a
+                                 | otherwise                = b
+                        where least = min width col
+fits :: Int -> String -> Bool
+w `fits` _  | w < 0 = False
+w `fits` ""         = True
+w `fits` ('\n':_)   = True
+w `fits` (c:cs)     = (w-1) `fits` cs
 
 
 hcat :: [Doc] -> Doc
