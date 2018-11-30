@@ -31,12 +31,6 @@ data Doc = Empty          |
            Union  Doc Doc
      deriving (Show)
 
--- Hope I can do well
-fill :: Int -> Doc -> Doc
-fill num Concat a b | a == Empty = a <> (fill num b)
-                    | otherwise (fill num a) <> b
-fill num Char   c   | c == ' '   = repe 
-
 
 empty :: Doc
 empty = Empty

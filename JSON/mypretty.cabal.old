@@ -1,0 +1,13 @@
+Name:            mypretty
+Version:         0.1
+Synopsis:        Execise in the book "Real World Haskell"
+Description:     Ued to understand Haskell a bit deeper and to learn doing packages
+Author:          Real World Haskell + myself
+Maintainer:      kupkemarkus@gmail.com
+License:         BSD3
+Cabal-Version:   >= 2.0
+
+Exposed-Modules: Prettify
+                 PrettyJSON
+                 SimpleJSON
+                 
