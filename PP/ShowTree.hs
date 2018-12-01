@@ -10,7 +10,7 @@ data Tree = Node String [Tree]
 
 showTree (Node s ts) = text s <> nest (length s) (showList ts)
 
-showList [] = empty
+showList [] = text "[]"
 showList ts = text "[" <> nest 1 (showTrees ts) <> text "]"
 
 showTrees [t]     = showTree t
