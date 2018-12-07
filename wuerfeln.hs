@@ -11,4 +11,4 @@ combinator m n j cs = generateNew cs
             where generateNew cs =  filter (\xs -> sum xs >= (m - 6*(n-j) ))
                                            (foldr (++) [] (map newThrowForExistingCombination cs))
 
-main = writeFile "out" (show (allThrowCombinationsSumGreaterM 10 34))
+main = writeFile "out" (show (allThrowCombinationsSumGreaterM 10 30))
