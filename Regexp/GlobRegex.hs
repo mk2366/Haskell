@@ -3,10 +3,10 @@ module GlobRegex (
     matchesGlob
 ) where
 
-import regex-tdfa ((=~))
+import Text.Regex.TDFA ((=~))
 
 globToRegex :: String -> String
-globToRegex gs  = '^' : globRoRegex' gs ++ "$"
+globToRegex gs  = '^' : globToRegex' gs ++ "$"
 
 globToRegex' :: String -> String
 globToRegex' "" = ""
@@ -27,4 +27,5 @@ charClass (']':cs) = ']' : globToRegex' cs
 charClass (c:cs)   = c : charClass cs
 charClass []       = error "unterminated character class"
 
-
+matchesGlob :: FilePath -> String -> Bool
+file `matchesGlob` pat = file =~ globToRegex pat
