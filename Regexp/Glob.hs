@@ -39,8 +39,7 @@ listMatches dirName pat =
     ((if null dirName then getCurrentDirectory
                      else return dirName)
         >>=
---    handle (const (return [])) $ do
-        getDirectoryContents
+        handle (\(SomeException e) -> return []) . getDirectoryContents 
         >>= (\names -> if isHidden pat then return (filter isHidden names)
                                        else return (filter (not . isHidden) names)))
 
