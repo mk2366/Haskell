@@ -7,37 +7,48 @@ import Control.Exception
 import Control.Monad(forM)
 import GlobRegex (matchesGlob)
 
-namesMatching pat | not (isPattern pat) = doesNameExist pat >>= return (\a -> [pat | a])
+namesMatching :: FilePath -> IO [String]
+namesMatching pat | not (isPattern pat) = doesNameExist pat >>= (\a -> return [pat | a])
                   | otherwise = 
                                 case splitFileName pat of
-                                 ("", baseName) -> do
-                                     curDir <- getCurrentDirectory
-                                     listMatches curDir baseName
-                                 (dirName, baseName) -> do
-                                     dirs <- if isPattern dirName then namesMatching (dropTrailingPathSeparator dirName)
-                                                                  else return [dirName]
-                                     let listDir  = if isPattern baseName then listMatches
-                                                                          else listPlain
-                                     pathNames <- forM dirs $ \dir -> do
-                                                                 baseNames <- listDir dir baseName
-                                                                 return (map (dir </>) basenames)
-                                     return (concat pathNames)
+                                 ("", baseName) -> 
+                                     getCurrentDirectory >>=
+                                     (`listMatches` baseName)
+                                 (dirName, baseName) -> 
+                                    let listDir  = if isPattern baseName then listMatches
+                                                                         else listPlain
+                                        in
+                                         concat <$>                     
+                                         ((if isPattern dirName then namesMatching (dropTrailingPathSeparator dirName)
+                                                               else return [dirName])
+                                         >>=
+                                         (\dirs -> forM dirs $ \dir -> doesFileExist dir >>= (\b -> if not b then
+                                                                 map (dir </>) <$>
+                                                                 listDir dir baseName 
+                                                                                          else
+                                                                 return [])))
 
 doesNameExist :: FilePath -> IO Bool
-doesNameExist name = do
-    fileExists <- doesFileExist name
+doesNameExist name = doesFileExist name >>= (\fileExists ->
     if fileExists then return True
-                  else doesDirectoryExist name
+                  else doesDirectoryExist name)
 
 listMatches :: FilePath -> String -> IO [String]
-listMatches dirName pat = do
-    dirName' <- if null dirName then getCurrentDirectory
-                                else return dirName
-    handle (const (return [])) $ do
-        names <- getDirectoryContents dirname'
-        let names' = if isHidden pat then filter isHidden names
-                                     else filter (not . isHidden) names
-        return (filter (`matchesGlob` pat) names')
+listMatches dirName pat = 
+    filter (`matchesGlob` pat) <$>
+    ((if null dirName then getCurrentDirectory
+                     else return dirName)
+        >>=
+--    handle (const (return [])) $ do
+        getDirectoryContents
+        >>= (\names -> if isHidden pat then return (filter isHidden names)
+                                       else return (filter (not . isHidden) names)))
+
+listPlain :: FilePath -> String -> IO [String]
+listPlain dirName baseName = do
+    exists <- if null baseName then doesDirectoryExist dirName
+                               else doesNameExist (dirName </> baseName)
+    return [baseName | exists]
 
 isHidden ('.':_) = True
 isHidden _       = False
