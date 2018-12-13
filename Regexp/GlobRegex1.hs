@@ -29,5 +29,5 @@ charClass (']':cs) = globToRegex' cs >>= (\s -> Right (']':s))
 charClass (c:cs)   = charClass cs >>= (\s -> Right (c:s))
 charClass []       = Left "unterminated character class"
 
-matchesGlob :: FilePath -> String -> Bool
-file `matchesGlob` pat = file =~ globToRegex pat
+matchesGlob :: FilePath -> String -> Either GlobError Bool
+file `matchesGlob` pat = fmap (file =~) $ globToRegex pat

@@ -5,7 +5,7 @@ import System.FilePath (dropTrailingPathSeparator, splitFileName, (</>))
 
 import Control.Exception
 import Control.Monad(forM)
-import GlobRegex (matchesGlob)
+import GlobRegex1 (matchesGlob)
 
 namesMatching :: FilePath -> IO [String]
 namesMatching pat | not (isPattern pat) = doesNameExist pat >>= (\a -> return [pat | a])
