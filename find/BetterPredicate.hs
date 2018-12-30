@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE RecordWildCards #-}
 
 
 import Control.Monad (filterM, forM, liftM, return, (>>=))
@@ -105,6 +106,11 @@ betterFind p path = getRecursiveContents path >>= filterM check
                             size  <- getFileSize name
                             modified <- catch (getModificationTime name) (\(ex :: SomeException) -> getCurrentTime)
                             return (p name perms size modified)
+
+betterFind2 :: ([Info] -> [Info]) -> FilePath -> Predicate -> IO [FilePath]
+betterFind2 order path p = liftM (map infoPath) (traverse order path >>= filterM check)
+                     where 
+                        check Info{..} =  return (p infoPath infoPerms infoSize infoModTime)
 
 myTest2 = (liftPath takeExtension ==? ".hs") &&! (sizeP >? 200)
 
