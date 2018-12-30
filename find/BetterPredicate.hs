@@ -1,10 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Control.Monad (filterM)
-import System.Directory (Permissions(..), getModificationTime, getPermissions)
-import Data.Time.Clock (UTCTime(..))
+import System.Directory (Permissions(..), getModificationTime, getPermissions, emptyPermissions)
+import Data.Time.Clock (UTCTime(..), getCurrentTime)
 import System.FilePath (takeExtension)
-import Control.Exception (bracket, handle, IOException(..))
+import Control.Exception (bracket, handle, IOException(..),SomeException(..), catch)
 import System.IO (IOMode(..), hClose, hFileSize, openFile, withFile)
 
 import RecursiveContents (getRecursiveContents)
@@ -61,12 +61,12 @@ betterFind :: Predicate -> FilePath -> IO [FilePath]
 betterFind p path = getRecursiveContents path >>= filterM check
                        where 
                         check name = do
-                            perms <- getPermissions name
-                            size  <- saferFileSize name
-                            modified <- getModificationTime name
+                            perms <- catch (getPermissions name) (\(ex :: SomeException) -> return emptyPermissions)
+                            size  <- getFileSize name
+                            modified <- catch (getModificationTime name) (\(ex :: SomeException) -> getCurrentTime)
                             return (p name perms size modified)
 
-myTest2 = (liftPath takeExtension ==? ".hs") &&! (sizeP >? 1000)
+myTest2 = (liftPath takeExtension ==? ".hs") &&! (sizeP >? 200)
 
 main = do
     list <- betterFind myTest2 "../.."
