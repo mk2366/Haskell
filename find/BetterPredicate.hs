@@ -85,6 +85,12 @@ equalP   = liftP (==)
 (<?) = lesserP
 (==?) = equalP
 
+-- thats me
+justifyPredicate :: InfoP Bool -> (FilePath -> Maybe Permissions -> Maybe Integer -> Maybe UTCTime -> Bool)
+justifyPredicate p path (Just perm) size (Just modtime) = p path perm size modtime
+justifyPredicate _ _ Nothing _ _ = False
+justifyPredicate _ _ _ _ Nothing = False
+
 getFileSize :: FilePath -> IO (Maybe Integer)
 getFileSize path = handle (\(ex :: IOException) -> return Nothing) $
     withFile path ReadMode $ \h -> do
@@ -110,7 +116,7 @@ betterFind p path = getRecursiveContents path >>= filterM check
 betterFind2 :: ([Info] -> [Info]) -> FilePath -> Predicate -> IO [FilePath]
 betterFind2 order path p = liftM (map infoPath) (traverse order path >>= filterM check)
                      where 
-                        check Info{..} =  return (p infoPath infoPerms infoSize infoModTime)
+                        check Info{..} =  return (justifyPredicate p infoPath infoPerms infoSize infoModTime)
 
 myTest2 = (liftPath takeExtension ==? ".hs") &&! (sizeP >? 200)
 
