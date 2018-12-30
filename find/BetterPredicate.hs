@@ -1,17 +1,57 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
-import Control.Monad (filterM)
-import System.Directory (Permissions(..), getModificationTime, getPermissions, emptyPermissions)
+
+import Control.Monad (filterM, forM, liftM, return, (>>=))
+import System.Directory (Permissions(..), searchable, getModificationTime, getPermissions, emptyPermissions, getDirectoryContents)
 import Data.Time.Clock (UTCTime(..), getCurrentTime)
-import System.FilePath (takeExtension)
+import System.FilePath (takeExtension, (</>))
 import Control.Exception (bracket, handle, IOException(..),SomeException(..), catch)
 import System.IO (IOMode(..), hClose, hFileSize, openFile, withFile)
+import Prelude (Bool(..), FilePath, Maybe(..), Integer, Show, Eq, Ord, IO, undefined, concat,
+                 map, mapM, ($), (&&), (||), (<), (>), (==), putStrLn, String(..), (/=),
+                 filter, notElem, (.), maybe, id, reverse)
+import Data.Sort (sort)
 
 import RecursiveContents (getRecursiveContents)
 
 type Predicate = InfoP Bool
 
 type InfoP a = FilePath -> Permissions -> Maybe Integer -> UTCTime -> a
+
+data Info = Info {
+             infoPath :: FilePath
+            ,infoPerms :: Maybe Permissions
+            ,infoSize :: Maybe Integer
+            ,infoModTime :: Maybe UTCTime
+} deriving (Show, Eq, Ord)
+
+getInfo :: FilePath -> IO Info
+getInfo path = do
+    perms <- maybeIO (getPermissions path)
+    size  <- maybeIO (bracket (openFile path ReadMode) hClose hFileSize)
+    modified <- maybeIO (getModificationTime path)
+    return (Info path perms size modified)
+
+maybeIO :: IO a -> IO (Maybe a)
+maybeIO act = handle (\(ex :: IOException) -> return Nothing)(Just `liftM` act)
+
+traverse :: ([Info] -> [Info]) -> FilePath -> IO [Info]
+traverse order path = do
+    names <- getUsefulContents path
+    contents <- mapM getInfo (path : map (path </>) names)
+    liftM concat $ forM (order contents) $ \info -> 
+        if isDirectory info && infoPath info /= path
+            then traverse order (infoPath info)
+            else return [info]
+
+getUsefulContents :: FilePath -> IO [String]
+getUsefulContents path = do
+    names <- getDirectoryContents path
+    return (filter (`notElem` [".",".."]) names)
+
+isDirectory :: Info -> Bool
+isDirectory = maybe False searchable . infoPerms
 
 pathP :: InfoP FilePath
 pathP filePath _ _ _ = filePath
