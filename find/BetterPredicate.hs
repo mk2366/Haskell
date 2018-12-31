@@ -2,6 +2,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE RecordWildCards #-}
 
+module BetterPredicate where
 
 import Control.Monad (filterM, forM, liftM, return, (>>=))
 import System.Directory (Permissions(..), searchable, getModificationTime, getPermissions, emptyPermissions, getDirectoryContents)
@@ -120,6 +121,6 @@ betterFind2 order path p = liftM (map infoPath) (traverse order path >>= filterM
 
 myTest2 = (liftPath takeExtension ==? ".hs") &&! (sizeP >? 200)
 
-main = do
-    list <- betterFind myTest2 "../.."
-    putStrLn $ concat list
+-- main = do
+--     list <- betterFind myTest2 "../.."
+--     putStrLn $ concat list
