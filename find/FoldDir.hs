@@ -19,20 +19,21 @@ foldTree iter initSeed path = do
     where
         fold :: a -> FilePath -> IO (Iterate a)
         fold seed subpath = getUsefulContents subpath >>= walk seed
-        walk :: a -> [FilePath] -> IO (Iterate a)
-        walk seed (name:names) = do
-            let path' = path </> name
-            info <- getInfo path'
-            case iter seed info of
-                done@(Done _) -> return done
-                Skip seed'    -> walk seed' names
-                Continue seed' | isDirectory info -> do
-                                                     next <- fold seed' path'
-                                                     case next of
-                                                         done@(Done _) -> return done
-                                                         iSeed         -> walk (unwrap iSeed) names
-                               | otherwise -> walk seed' names
-        walk seed _ = return (Continue seed)
+           where
+              walk :: a -> [FilePath] -> IO (Iterate a)
+              walk seed (name:names) = do
+               let path' = subpath </> name
+               info <- getInfo path'
+               case iter seed info of
+                   done@(Done _) -> return done
+                   Skip seed'    -> walk seed' names
+                   Continue seed' | isDirectory info -> do
+                                                        next <- fold seed' path'
+                                                        case next of
+                                                            done@(Done _) -> return done
+                                                            iSeed         -> walk (unwrap iSeed) names
+                                  | otherwise -> walk seed' names
+              walk seed _ = return (Continue seed)
 
 atMostThreeHaskellFiles :: Iterator [FilePath]
 atMostThreeHaskellFiles paths info 
@@ -43,7 +44,8 @@ atMostThreeHaskellFiles paths info
                             where extension = map toLower (takeExtension path)
                                   path = infoPath info
 
-countDirectories :: Iterator Integer
-countDirectories count info = Continue (if isDirectory info then count + 1 else count)
+countDirectories  :: Iterator Integer
+countDirectories count info | isDirectory info && takeFileName (infoPath info) == ".git" = Skip count 
+                            | otherwise = Continue (if isDirectory info then count + 1 else count)
 
 

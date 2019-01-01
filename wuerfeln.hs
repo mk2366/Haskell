@@ -22,4 +22,4 @@ combinator m n j cs = generateNew cs
 
 main = getArgs >>= print . pNM'
 
---
+pNM'' n m = fromIntegral (length $ filter (>=m . sum) $ sequence $ take n $ repeat [1..6]) / 6 ^ n
