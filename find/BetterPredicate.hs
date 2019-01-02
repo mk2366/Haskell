@@ -49,7 +49,7 @@ traverse order path = do
 
 getUsefulContents :: FilePath -> IO [String]
 getUsefulContents path = do
-    names <- getDirectoryContents path
+    names <- handle (\(ex :: IOException) -> return [])(getDirectoryContents path)
     return (filter (`notElem` [".",".."]) names)
 
 isDirectory :: Info -> Bool
