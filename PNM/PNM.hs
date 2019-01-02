@@ -13,15 +13,6 @@ instance Show Greymap where
     show (Greymap w h m _) = "Greymap " ++ show w ++ "x" ++ show h ++
                              " " ++ show m
 
-data ParseState = ParseState {
-      string :: L.ByteString
-    , offset :: Int64           -- imported from Data.Int
-    } deriving (Show)
-
-newtype Parse a = Parse {
-      runParse :: ParseState -> Either String (a, ParseState)
-    }
-
 parseP5 :: L.ByteString -> Maybe (Greymap, L.ByteString)
 parseP5 s =
     case matchHeader (L8.pack "P5") s of
@@ -48,7 +39,7 @@ parseP5 s =
 
 (>>?) :: Maybe a -> (a -> Maybe b) -> Maybe b
 Nothing >>? _ = Nothing
-Just v  >>?
+Just v  >>? f = f v
 
 parseP5_take2 :: L.ByteString -> Maybe (Greymap, L.ByteString)
 parseP5_take2 s =
@@ -86,3 +77,6 @@ getBytes n str = let count           = fromIntegral n
                  in if L.length prefix < count
                     then Nothing
                     else Just both
+
+readImage :: FilePath -> IO (Maybe (Greymap, L.ByteString))
+readImage file = fmap parseP5_take2 (L.readFile file)
