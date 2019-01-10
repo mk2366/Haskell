@@ -3,6 +3,7 @@ import qualified Data.ByteString.Lazy as L
 import Data.Word
 import Data.Int
 import Data.Char
+import Control.Monad (ap,liftM)
 
 data Greymap = Greymap {
       greyWidth :: Int
@@ -138,6 +139,16 @@ parseBytes n =
     in putState st' ==>&
        assert (L.length h == n') "end of input" ==>&
        identity h
+
+instance Monad Parse where
+    return = identity
+    (>>=) = (==>)
+    fail = bail
+
+instance Applicative Parse where
+    pure = return
+    (<*>) = ap
+
 
 readImage :: FilePath -> IO (Either String Greymap)
 readImage file = fmap (parse parseRawPGM) (L.readFile file)
