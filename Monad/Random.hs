@@ -13,3 +13,10 @@ getRandom =
 
 get2Randoms :: (Random a, Random b) => RandomState (a,b)
 get2Randoms = liftM2 (,) getRandom getRandom
+
+runTwoRandoms :: IO (Bool, Int)
+runTwoRandoms = do
+    oldState <- getStdGen
+    let (result, newState) = runState get2Randoms oldState
+    setStdGen newState
+    return result
