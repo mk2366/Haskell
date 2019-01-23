@@ -23,3 +23,5 @@ next = S $ do st <- get
                              return (Just x)
 
 runSupply (S m) xs = runState m xs
+
+doubleNext = liftM2 (,) next next
