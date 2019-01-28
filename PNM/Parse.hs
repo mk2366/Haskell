@@ -12,6 +12,8 @@ data Greymap = Greymap {
     , greyData :: L.ByteString
     } deriving (Eq)
 
+type Kupke = parseRawPGM
+
 instance Show Greymap where
     show (Greymap w h m _) = "Greymap " ++ show w ++ "x" ++ show h ++
                              " " ++ show m
