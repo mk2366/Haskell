@@ -1,0 +1,1 @@
+docker run -it -v /Users/d024894/dev/Haskell/teststack:/src tehnix/ghcjs-docker:lts-9.21
