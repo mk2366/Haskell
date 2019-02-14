@@ -9,7 +9,7 @@ main = mainWidgetWithHead headUI5 body
 
 body :: MonadWidget t m => m ()
 body = do 
-    ev1  <- buttonUI5 "Peter is great"
+    ev1  <- buttonUI5 "Web Components are great"
     el "br" blank
     text "Number of clicks: "
     dyn1 <- count ev1
