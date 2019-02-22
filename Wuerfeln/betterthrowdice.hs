@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-
+module BetterThrowDice (psGt, ps) where
 
 import Data.Ratio
 import Data.List
